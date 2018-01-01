@@ -65,12 +65,35 @@ window.App = {
   },
 
   actualiserInfos: function (){
-    console.log("Refreshing...");
+    console.log("Refreshing Roulette Display...");
     
     $("#choixUser select").empty();
     $("#recapAccounts tbody").empty();
 
 
+
+  web3.eth.getBalance(App.instances.roulette.contract.address, function (error, result) {
+    if(error){
+      console.error(error);
+    }else{
+      $("#soldeContrat").empty().append(web3.fromWei(result, "ether").toNumber());
+    }
+  });
+  App.instances.roulette.contract.getResultNumber(function(error, result) {
+    if(error){
+      console.log(error);
+    }else{
+      $("#resultatContrat").empty().append(result.toNumber());
+    }
+
+  });        
+      
+    
+
+    return App.refreshingListeInstances();
+  },
+  refreshingAccount: function(){
+    console.log("Refreshing Account Display...");
     web3.eth.getAccounts(function(error, accounts) {
       if (error) {
         console.log(error);
@@ -90,32 +113,17 @@ window.App = {
             <td>" + web3.fromWei(result, "ether").toNumber() + "</td>\
           </tr>\
           ");
+
+        $("#creditsCount").empty().append(web3.fromWei(result, "ether").toNumber());
         }
       });
       
     });
+  });
     
-    web3.eth.getBalance(App.instances.roulette.contract.address, function (error, result) {
-      if(error){
-        console.error(error);
-      }else{
-        $("#soldeContrat").empty().append(web3.fromWei(result, "ether").toNumber());
-      }
-    });
-    App.instances.roulette.contract.getResultNumber(function(error, result) {
-      if(error){
-        console.log(error);
-      }else{
-        $("#resultatContrat").empty().append(result.toNumber());
-      }
-
-    });        
-      
-    });
-
-    return App.refreshingListeInstances();
   },
   refreshingListeInstances: function(){
+    console.log("Refreshing Liste Roulette Display...");
     // We want to know, during the callack, the indice of the contract ( to attach the address to the button).
     // So we need to count how many callbacks have been called until now.
     var callsOverCount = 0;
@@ -144,6 +152,7 @@ window.App = {
         }
       });
     }   
+    return App.refreshingAccount();
   },
   miserroulette: function (){
     var parieur = $("#choixUser select").val();
@@ -192,6 +201,7 @@ window.App = {
       if (error) {
         console.log(error);
       }else{
+        console.log("Refreshing List of Contracts...");
         var n = result;
 
         var instances = []; // This will be the list of contracts addresses.
@@ -231,9 +241,12 @@ window.App = {
             }
           });
         }
-        console.log(instances);
-        
         App.listeInstances = instances;
+        // if there are no contracts
+        if (callsCount == 0){
+          $("#no_games_available").show();
+          return App.refreshingAccount();
+        }
         
       }
      

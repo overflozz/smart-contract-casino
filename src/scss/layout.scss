@@ -2,4 +2,31 @@ $background-color: #213262;
 
 body{
     background-color: $background-color;    
+    font-family: 'Merriweather Sans', sans-serif;
+}
+
+#top-nav {
+    height: 94px;
+    box-shadow:none;
+}
+#top-nav .nav-wrapper ul, #top-nav .nav-wrapper ul li, #top-nav .nav-wrapper ul li a{
+    height:100%;
+ }
+
+// we want a vertical align of links :
+#top-nav .nav-wrapper ul li a,#top-nav .nav-wrapper a.brand-logo{
+    padding:0px 36px;
+    height:100%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.fullHeight{
+    height: 100vh;
 }
