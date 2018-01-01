@@ -4,6 +4,7 @@ window.App = {
   instances:{},
   listeInstances: [],
   ownerInstance: "",
+  currentSection: "#listRoulettes",
 
   init: function() {
 
@@ -33,34 +34,44 @@ window.App = {
   },
 
   loadContract: function(address) {
+    console.log("Loading Contract...");
     // We will load the instance we want to play with.
       App.contracts.Roulette
       .at(address) //Address of the contract
       .then(instance =>{
         App.instances.roulette = instance;
         // We now look for the Owner.
-        App.instances.roulette.contract.getOwner(function(result, error){
+        
+        App.instances.roulette.contract.getOwner(function(error, result){
           if(error){
             console.log(error);
           }
           else{
+            
             App.ownerInstance = result;
             // Then we refresh the display.
+           
+            App.showPanelRoulette();
+
             return App.actualiserInfos();
+            
           }
         });
+        
       });
-    
+   
   },
 
   createContract: function(){
     // This will create a new instance of Roulette Contract.
     var parieur = $("#choixUser select").val();
     App.contracts.Roulette.new(0, { from: parieur, value: web3.toWei(10, "ether") , gas: 6000000}).then(function(instance){
+      
+      console.log("New contract created");
       App.instances.roulette = instance;
-      App.listeTransactions();
-      App.actualiserInfos();
-
+      App.appendDisplayInstance(App.instances.roulette.address);
+      $("#no_games_available").hide();
+      App.refreshingAccount();
     });
   },
 
@@ -122,6 +133,29 @@ window.App = {
   });
     
   },
+  //Refreshes the entire List
+  appendDisplayInstance: function(address){
+    web3.eth.getBalance(address, function (error, result) {
+      if(error){
+        console.error(error);
+      }else{
+        //Callback and converting to get the balance.
+        var balance = web3.fromWei(result, "ether").toNumber();
+        // Append in the front page.
+        $("#listeInstances").append("\
+        <a href='#' onclick='App.loadContract(\""+address+"\")'>\
+        <div class='col s3' >\
+        <div class='card white center black-text'><br />\
+        Banque :\
+        <h3> "+ balance  +"</h3><br />\
+        </div>\
+        </a>\
+        ");
+
+      }
+    });
+
+  },
   refreshingListeInstances: function(){
     console.log("Refreshing Liste Roulette Display...");
     // We want to know, during the callack, the indice of the contract ( to attach the address to the button).
@@ -132,34 +166,42 @@ window.App = {
     $("#listeInstances").empty();
     for (var i in App.listeInstances){
       // For each instances we retrieve the balance and show it.
-      web3.eth.getBalance(App.listeInstances[i].address, function (error, result) {
-        if(error){
-          console.error(error);
-        }else{
-          //Callback and converting to get the balance.
-          var balance = web3.fromWei(result, "ether").toNumber();
-          // Append in the front page.
-          $("#listeInstances").append("\
-          <div class='col s3'>\
-          <div class='card blue-grey darken-1 center white-text'><br />\
-          Banque :\
-          <h3> "+ balance  +"</h3><br />\
-          <a class='waves-effect waves-light btn black-text white' onclick='App.loadContract(\""+App.listeInstances[callsOverCount].address+"\")'><i class='material-icons left'>cloud</i>button</a><br />\
-          </div>\
-          ");
-          callsOverCount += 1;
-
-        }
-      });
+      App.appendDisplayInstance(App.listeInstances[i].address);
     }   
     return App.refreshingAccount();
   },
-  miserroulette: function (){
+  betEven: function (){
     var parieur = $("#choixUser select").val();
     var mise = $("#mise")["0"].value;
     var nombre = $("#nombre")["0"].value;
     //creation de la transaction pour le betEven.
     App.instances.roulette.betEven({ from: parieur, value: web3.toWei(mise, "ether") , gas: 2000000}).then(function(result, error){
+      console.log(result);
+      App.actualiserInfos();
+      
+    });
+     
+      
+  },  
+  betOdd: function (){
+    var parieur = $("#choixUser select").val();
+    var mise = $("#mise")["0"].value;
+    var nombre = $("#nombre")["0"].value;
+    //creation de la transaction pour le betEven.
+    App.instances.roulette.betOdd({ from: parieur, value: web3.toWei(mise, "ether") , gas: 2000000}).then(function(result, error){
+      console.log(result);
+      App.actualiserInfos();
+      
+    });
+     
+      
+  },  
+  betSingle: function (){
+    var parieur = $("#choixUser select").val();
+    var mise = $("#mise")["0"].value;
+    var nombre = $("#nombre")["0"].value;
+    //creation de la transaction pour le betEven.
+    App.instances.roulette.betSingle(nombre, { from: parieur, value: web3.toWei(mise, "ether") , gas: 2000000}).then(function(result, error){
       console.log(result);
       App.actualiserInfos();
       
@@ -205,7 +247,7 @@ window.App = {
         var n = result;
 
         var instances = []; // This will be the list of contracts addresses.
-        for(var i = 0; i < n; i++) {
+        for(var i = 0; i <= n; i++) {
           web3.eth.getBlock(i, true, function(error, result){
             var block = result; 
             // We look at all transactions in the block.
@@ -228,13 +270,15 @@ window.App = {
                       instances.push(instance);
                       // We increase the number of calls that are finished.
                       callsOverCount += 1;
+                      // DEPRECATED
                       // We have reached the last call so we can launch the display refresh.
-                      if(callsOverCount == callsCount){
-                        App.refreshingListeInstances();
-                      }
-                      
+                      //if(callsOverCount == callsCount){
+                        //App.refreshingListeInstances();
+                      //}
+                      App.appendDisplayInstance(address);
                     });
                     callsCount += 1;
+                    $("#no_games_available").hide();
                   }              
                 });
               }
@@ -242,12 +286,11 @@ window.App = {
           });
         }
         App.listeInstances = instances;
-        // if there are no contracts
-        if (callsCount == 0){
-          $("#no_games_available").show();
-          return App.refreshingAccount();
-        }
         
+      }// if there are no contracts
+      if (callsCount == 0){
+        $("#no_games_available").show();
+        return App.refreshingAccount();
       }
      
      
@@ -255,8 +298,24 @@ window.App = {
     });
     
     
-  }
+  },
   
+
+  // ROUTES
+  changeSection: function(newSection){
+    $(App.currentSection).show().fadeOut(2000, function(){
+      $(newSection).show().fadeIn(2000);
+      App.currentSection = newSection;
+    });   
+  },
+
+  showListRoulettes: function(){
+    return App.changeSection("#listRoulettes");
+  },
+
+  showPanelRoulette: function(){
+    return App.changeSection("#roulettePanel");
+  }
 };
 
 

@@ -27,4 +27,13 @@ body {
 .fullHeight {
   height: 100vh;
 }
+
+#mainContainer {
+  margin-top: -94px;
+}
+
+.horizontalCenter .row {
+  left: 50%;
+  width: 100%;
+}
 /*# sourceMappingURL=layout.css.map */
