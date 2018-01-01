@@ -1,0 +1,5 @@
+
+var Web3 = require('web3');
+var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:7545"));
+
+Roulette.new(10, { at: "0x2b59817681a91767b103457947686f3f3837c97a", from: web3.eth.accounts[0], value: web3.toWei(40, "ether") }).then(function(_contract) { contract = _contract; });
